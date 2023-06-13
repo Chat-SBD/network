@@ -160,7 +160,7 @@ class ResizeVideo(keras.layers.Layer):
 
 
 # building the layers of our residual network
-input_shape = (None, 28, 640, 640, 3)
+input_shape = (None, 224, 640, 640, 3)
 input = layers.Input(shape = (input_shape[1:]))
 x = input
 
@@ -177,6 +177,7 @@ x = ResizeVideo(640 // 4, 640 // 4)(x)
 x = add_residual_block(x, 32, (3, 3, 3))
 x = ResizeVideo(640 // 8, 640 // 8)(x)
 
+
 # Block 3
 x = add_residual_block(x, 64, (3, 3, 3))
 x = ResizeVideo(640 // 16, 640 // 16)(x)
@@ -190,40 +191,35 @@ x = layers.Dense(4)(x)
 
 model = keras.Model(input, x)
 
-
-
-
 output_sig = (
-    tf.TensorSpec(shape = (28, 640, 640, 3), dtype = tf.int16),
+    tf.TensorSpec(shape = (224, 640, 640, 3), dtype = tf.int16),
     tf.TensorSpec(shape = (), dtype = tf.int8)
 )
 
-train_dsv1 = tf.data.Dataset.from_generator(
-    VideoGen('batch/train/', 28, 1),
+train_ds = tf.data.Dataset.from_generator(
+    VideoGen('batch/train/', 28, 8),
+    output_signature = output_sig
+)
+train_ds = train_ds.batch(55)
+ 
+test_ds = tf.data.Dataset.from_generator(
+    VideoGen('batch/test/', 28, 8),
     output_signature = output_sig
 )
 
-test_dsv1 = tf.data.Dataset.from_generator(
-    VideoGen('batch/test/', 28, 1),
-    output_signature = output_sig
-)
-
-
-
-#train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size = tf.data.AUTOTUNE)
+test_ds = test_ds.batch(10)
+train_ds = train_ds.cache().shuffle(1000).prefetch(buffer_size = tf.data.AUTOTUNE)
 
 frames, labels = next(iter(train_ds))
-print(frames.shape)
+
 
 model.build(frames)
-# Visualize the model
-keras.utils.plot_model(model, expand_nested=True, dpi=60, show_shapes=True)
-
+print(model)
 
 model.compile(loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True), 
-              optimizer = keras.optimizers.Adam(learning_rate = 0.0001), 
-              metrics = ['accuracy', 'FalseNegatives', 'FalsePositives'])
-
+              optimizer = keras.optimizers.legacy.Adam(learning_rate = 0.0001), 
+              metrics = ['accuracy'])
+print(model)
 
 
 history = model.fit(x = train_ds,
