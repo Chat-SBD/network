@@ -1,3 +1,4 @@
+# each node has 2 cores - running 2 processes on each for 10 total is optimal
 # mpiexec -n 10 -f machinefile <command> <command args...>
 
 beowulf:2
