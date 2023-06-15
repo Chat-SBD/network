@@ -1,0 +1,7 @@
+# mpiexec -n 10 -f machinefile <command> <command args...>
+
+beowulf:2
+node1:2
+node2:2
+node3:2
+node4:2
