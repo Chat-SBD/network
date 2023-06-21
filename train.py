@@ -6,6 +6,7 @@ import tensorflow as tf
 import einops
 import keras
 from keras import layers
+import matplotlib.pyplot as plt
 
 class VideoGen:
     def __init__(self, dirpath, length, fps):
@@ -38,19 +39,22 @@ class VideoGen:
         while len(frames) < self.length * self.fps:
             video.set(cv2.CAP_PROP_POS_FRAMES, index)
             ret, frame = video.read()
-
+            frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
             newframe = []
             for row in frame:
                 newrow = []
                 for pixel in row:
-                    newrow.append([0.2989 * pixel[0] + 0.5870 * pixel[1] + 0.1140 * pixel[2]])
+                    newrow.append([pixel])
                 newframe.append(newrow)
 
             frames.append(newframe)
             index += stepper
         video.release()
 
+        print("Video loaded")
+        
         return np.array(frames)
+    
     
     def __call__(self):
         """
@@ -81,6 +85,41 @@ class Conv2Plus1D(keras.layers.Layer) :
 
     def call(self, x) :
         return self.seq(x)
+
+def plot_history(history):
+  """
+    Plotting training and validation learning curves.
+
+    Args:
+      history: model history with all the metric measures
+  """
+  fig, (ax1, ax2) = plt.subplots(2)
+
+  fig.set_size_inches(18.5, 10.5)
+
+  # Plot loss
+  ax1.set_title('Loss')
+  ax1.plot(history.history['loss'], label = 'train')
+  ax1.plot(history.history['val_loss'], label = 'test')
+  ax1.set_ylabel('Loss')
+
+  # Determine upper bound of y-axis
+  max_loss = max(history.history['loss'] + history.history['val_loss'])
+
+  ax1.set_ylim([0, np.ceil(max_loss)])
+  ax1.set_xlabel('Epoch')
+  ax1.legend(['Train', 'Validation']) 
+
+  # Plot accuracy
+  ax2.set_title('Accuracy')
+  ax2.plot(history.history['accuracy'],  label = 'train')
+  ax2.plot(history.history['val_accuracy'], label = 'test')
+  ax2.set_ylabel('Accuracy')
+  ax2.set_ylim([0, 1])
+  ax2.set_xlabel('Epoch')
+  ax2.legend(['Train', 'Validation'])
+
+  plt.show()
 
 
 class ResidualMain(keras.layers.Layer):
@@ -168,7 +207,7 @@ class ResizeVideo(keras.layers.Layer):
 
 
 # building the layers of our residual network
-input_shape = (None, 224, 640, 640, 3)
+input_shape = (None, 224, 640, 640, 1)
 input = layers.Input(shape = (input_shape[1:]))
 x = input
 
@@ -200,7 +239,7 @@ x = layers.Dense(4)(x)
 model = keras.Model(input, x)
 
 output_sig = (
-    tf.TensorSpec(shape = (224, 640, 640, 3), dtype = tf.int16),
+    tf.TensorSpec(shape = (224, 640, 640, 1), dtype = tf.int16),
     tf.TensorSpec(shape = (), dtype = tf.int8)
 )
 
@@ -229,8 +268,10 @@ model.compile(loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True
               metrics = ['accuracy'])
 print(model)
 
-
+ 
 history = model.fit(x = train_ds,
                     epochs = 50, 
                     validation_data = test_ds)
+plot_history(history)
+
 
