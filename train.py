@@ -38,7 +38,15 @@ class VideoGen:
         while len(frames) < self.length * self.fps:
             video.set(cv2.CAP_PROP_POS_FRAMES, index)
             ret, frame = video.read()
-            frames.append(frame)
+
+            newframe = []
+            for row in frame:
+                newrow = []
+                for pixel in row:
+                    newrow.append([0.2989 * pixel[0] + 0.5870 * pixel[1] + 0.1140 * pixel[2]])
+                newframe.append(newrow)
+
+            frames.append(newframe)
             index += stepper
         video.release()
 
