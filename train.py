@@ -205,7 +205,6 @@ class ResizeVideo(keras.layers.Layer):
     return videos
 
 
-
 # building the layers of our residual network
 input_shape = (None, 224, 640, 640, 1)
 input = layers.Input(shape = (input_shape[1:]))
@@ -247,7 +246,7 @@ train_ds = tf.data.Dataset.from_generator(
     VideoGen('batch/train/', 28, 8),
     output_signature = output_sig
 )
-train_ds = train_ds.batch(55)
+train_ds = train_ds.batch(3)
  
 test_ds = tf.data.Dataset.from_generator(
     VideoGen('batch/test/', 28, 8),
@@ -264,14 +263,11 @@ model.build(frames)
 print(model)
 
 model.compile(loss = keras.losses.SparseCategoricalCrossentropy(from_logits=True), 
-              optimizer = keras.optimizers.legacy.Adam(learning_rate = 0.0001), 
+              optimizer = keras.optimizers.Adam(learning_rate = 0.0001), 
               metrics = ['accuracy'])
 print(model)
 
  
-history = model.fit(x = train_ds,
+model.fit(x = train_ds,
                     epochs = 50, 
                     validation_data = test_ds)
-plot_history(history)
-
-
