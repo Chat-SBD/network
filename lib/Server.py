@@ -1,3 +1,4 @@
+from glob import glob
 from mpi4py import MPI
 from tensorflow import keras
 
@@ -9,21 +10,20 @@ STATUS = 111
 GRAD = 222
 
 class Server:
-    def __init__(self, modelfile, modelfolder, liftfolder, optimizer, lossf):
+    def __init__(self, modelfolder, liftfolder, optimizer, lossf):
         """
         A class to manage cluster nodes, serve data to them, and average/apply their gradients.
         Every node instantiates this class for itself, but only the master node can perform certain operations.
         It works, just trust
 
         Args:
-            modelfile: str. The location of the model file that you are trying to train. 'lifts/squat/models/conv21d/conv21d.h5'
             modelfolder: str. The location of the folder of the model file that you are trying to train. 'lifts/squat/models/conv21d/'
             liftfolder: str. The location of the lift folder. 'lifts/squat/'
             optimizer: tensorflow.keras.Optimizer.
             lossf: tensorflow.keras.Loss.
         """
         self.progpath = modelfolder + 'progress'
-        self.modelpath = modelfile
+        self.modelpath = glob(modelfolder + '*.h5')[0]
         self.liftfolder = liftfolder
 
         self.world = MPI.COMM_WORLD
