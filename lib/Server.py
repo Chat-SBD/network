@@ -106,7 +106,7 @@ class Server:
         """
         Train the model. For each gradient from self.gradient, apply it to the model and save it.
         """
-        if rank == 0:
+        if self.rank == 0:
             for gradient in self.gradient(secs = SECS, fps = FPS, seed = SEED):
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
                 self.model.save(self.modelpath)
