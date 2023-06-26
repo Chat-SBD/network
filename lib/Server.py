@@ -5,33 +5,32 @@ from lib.data import SEED, SECS, FPS, get_vids, get_frames
 from lib.network import gradient
 
 # constants
-TRAIN = 'lifts/squat/batch/train/'
-TEST = 'lifts/squat/batch/test'
-PROG = 'lifts/squat/batch/progress.txt'
 STATUS = 111
 GRAD = 222
 
 class Server:
-    def __init__(self, modelpath, optimizer, lossf, progpath = PROG):
+    def __init__(self, modelfile, modelfolder, liftfolder, optimizer, lossf):
         """
         A class to manage cluster nodes, serve data to them, and average/apply their gradients.
         Every node instantiates this class for itself, but only the master node can perform certain operations.
         It works, just trust
 
         Args:
-            modelpath: str. The location of the file of the model that you are looking to train.
+            modelfile: str. The location of the model file that you are trying to train. 'lifts/squat/models/conv21d/conv21d.h5'
+            modelfolder: str. The location of the folder of the model file that you are trying to train. 'lifts/squat/models/conv21d/'
+            liftfolder: str. The location of the lift folder. 'lifts/squat/'
             optimizer: tensorflow.keras.Optimizer.
             lossf: tensorflow.keras.Loss.
-            progpath: str. The relative path to a file to write training progress to. 'batch/progress.txt'
         """
-        self.progpath = progpath
-        self.modelpath = modelpath
+        self.progpath = modelfolder + 'progress'
+        self.modelpath = modelfile
+        self.liftfolder = liftfolder
 
         self.world = MPI.COMM_WORLD
         self.rank = self.world.Get_rank()
         self.nprocs = self.world.Get_size()
 
-        self.model = keras.models.load_model(modelpath)
+        self.model = keras.models.load_model(self.modelpath)
         self.optimizer = optimizer
         self.lossf = lossf
 
@@ -59,7 +58,7 @@ class Server:
             fps: int. Frames per second to read in.
             seed: int = SEED. Random seed to shuffle videos with.
         """
-        videos = get_vids(TRAIN, seed)
+        videos = get_vids(self.liftfolder + 'train/', seed)
         vidindex = self.start
 
         # for each set of videos...
@@ -93,8 +92,8 @@ class Server:
                         ngrads += 1
                         sumgrad += self.world.recv(source = rank, tag = GRAD)
                 
-                gradient = sumgrad / ngrads
-                yield gradient
+                grad = sumgrad / ngrads
+                yield grad
                 vidindex += ngrads
             
             # sync index across all nodes after master updates it
@@ -107,6 +106,6 @@ class Server:
         Train the model. For each gradient from self.gradient, apply it to the model and save it.
         """
         if self.rank == 0:
-            for gradient in self.gradient(secs = SECS, fps = FPS, seed = SEED):
+            for gradient in self.gradient(secs, fps, seed):
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
                 self.model.save(self.modelpath)

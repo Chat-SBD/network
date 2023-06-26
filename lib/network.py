@@ -9,7 +9,7 @@ def gradient(model, lossf, data):
         lossf: tensorflow.keras.Loss. The loss function to use.
         data: tuple. (video frames, number of white lights).
     """
-    frames, lights = model
+    frames, lights = data
     with tf.GradientTape() as tape:
         preds = model(frames, training = True)
         loss = lossf(lights, preds)
