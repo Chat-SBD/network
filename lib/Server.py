@@ -1,80 +1,44 @@
-import cv2
-from glob import glob
-import numpy as np
-import random
 from mpi4py import MPI
+from tensorflow import keras
+
+from lib.data import SEED, SECS, FPS, get_vids, get_frames
+from lib.network import gradient
 
 # constants
-TRAIN = 'batch/train/'
-TEST = 'batch/test'
-PROG = 'batch/progress.txt'
-SEED = 42
-SECS = 25
-FPS = 24
+TRAIN = 'lifts/squat/batch/train/'
+TEST = 'lifts/squat/batch/test'
+PROG = 'lifts/squat/batch/progress.txt'
 STATUS = 111
 GRAD = 222
 
-def get_vids(path, seed = SEED):
-    """
-    Gets an array of tuples of full relative video path and number of white lights
-    [('batch/train/squat-batch1-18_2', 2), (...]
-
-    Args:
-        path: str. 'batch/train/' or 'batch/test/', whichever is being used.
-        seed: int, 0-100. Random seed for video shuffling.
-    """
-    videos = glob(path + '*.mp4')
-
-    random.seed(seed)
-    random.shuffle(videos)
-
-    return list(zip(videos, [int(video.split('_')[1].split('.')[0]) for video in videos]))
-
-def get_frames(path, secs = SECS, fps = FPS):
-    """
-    Return a numpy array of the frames from a video file.
-    An array (frames) of arrays (pixels) of arrays (color channel values) (I think).
-
-    Args:
-        path: str. The relative path to the video file.
-        secs: int. The number of seconds in the video to read in.
-        fps: int. Frames per seconds to read in.
-    """
-    video = cv2.VideoCapture(path)
-    frames = []
-
-    index = 0
-    stepper = int(video.get(cv2.CAP_PROP_FPS) / fps)
-    
-    while len(frames) < secs * fps:
-        video.set(cv2.CAP_PROP_POS_FRAMES, index)
-        ret, frame = video.read()
-        
-        frames.append(frame)
-        index += stepper
-
-    video.release()
-    return np.array(frames)
-
 class Server:
-    def __init__(self, progpath = PROG):
+    def __init__(self, modelpath, optimizer, lossf, progpath = PROG):
         """
-        A class to manage cluster nodes, serve videos to them, and average/apply their gradients.
+        A class to manage cluster nodes, serve data to them, and average/apply their gradients.
         Every node instantiates this class for itself, but only the master node can perform certain operations.
         It works, just trust
 
         Args:
-            path: str. The relative path to a file to write training progress to. 'batch/progress.txt'
+            modelpath: str. The location of the file of the model that you are looking to train.
+            optimizer: tensorflow.keras.Optimizer.
+            lossf: tensorflow.keras.Loss.
+            progpath: str. The relative path to a file to write training progress to. 'batch/progress.txt'
         """
         self.progpath = progpath
+        self.modelpath = modelpath
+
         self.world = MPI.COMM_WORLD
         self.rank = self.world.Get_rank()
         self.nprocs = self.world.Get_size()
 
+        self.model = keras.models.load_model(modelpath)
+        self.optimizer = optimizer
+        self.lossf = lossf
+
         with open(self.progpath, 'r') as progfile:
             self.start = int(progfile.readline().strip())
     
-    def __progress__(self, index):
+    def progress(self, index):
         """
         Write a number to a file. Only the master process (rank 0) can execute, to limit IO.
 
@@ -85,11 +49,10 @@ class Server:
             with open(self.progpath, 'w') as progfile:
                 progfile.write(str(index))
     
-    def train(self, secs = SECS, fps = FPS, seed = SEED):
+    def gradient(self, secs = SECS, fps = FPS, seed = SEED):
         """
         Distribute videos to all processes according to rank.
-        Average their calculated gradient descents, apply them,
-        and update progress index.
+        Average their calculated gradient descents and yield them in batches, currently of 10.
 
         Args:
             secs: int. The number of seconds in the video to read in.
@@ -111,10 +74,9 @@ class Server:
 
                 path, lights = videos[myindex]
                 myvid = get_frames(path, secs, fps)
-                mygradient = 69
 
                 # send my gradient to master process
-                self.world.send(mygradient, dest = 0, tag = GRAD)
+                self.world.send(gradient(self.model, self.lossf, (myvid, lights)), dest = 0, tag = GRAD)
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)
@@ -131,12 +93,20 @@ class Server:
                         ngrads += 1
                         sumgrad += self.world.recv(source = rank, tag = GRAD)
                 
-                # apply gradient to model
                 gradient = sumgrad / ngrads
-                do = 'something here'
+                yield gradient
                 vidindex += ngrads
             
             # sync index across all nodes after master updates it
             vidindex = self.world.bcast(vidindex, root = 0)
-            
-            self.__progress__(vidindex)
+
+            self.progress(vidindex)
+    
+    def train(self, secs = SECS, fps = FPS, seed = SEED):
+        """
+        Train the model. For each gradient from self.gradient, apply it to the model and save it.
+        """
+        if rank == 0:
+            for gradient in self.gradient(secs = SECS, fps = FPS, seed = SEED):
+                self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
+                self.model.save(self.modelpath)
