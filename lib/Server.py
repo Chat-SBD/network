@@ -109,3 +109,11 @@ class Server:
             for gradient in self.gradient(secs, fps, seed):
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
                 self.model.save(self.modelpath)
+
+"""
+
+output_sig = (
+    tf.TensorSpec(shape = (224, 640, 640, 3), dtype = tf.int16),
+    tf.TensorSpec(shape = (), dtype = tf.int8)
+)
+"""

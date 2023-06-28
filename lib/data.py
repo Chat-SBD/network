@@ -5,7 +5,7 @@ import random
 
 # constants
 SEED = 42
-SECS = 25
+SECS = 28
 FPS = 24
 
 def get_vids(path, seed = SEED):
