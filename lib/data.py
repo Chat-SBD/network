@@ -43,8 +43,16 @@ def get_frames(path, secs = SECS, fps = FPS):
     while len(frames) < secs * fps:
         video.set(cv2.CAP_PROP_POS_FRAMES, index)
         ret, frame = video.read()
-        
-        frames.append(frame)
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        newframe = []
+        for row in frame:
+            newrow = []
+            for pixel in row:
+                newrow.append([pixel])
+            newframe.append(newrow)
+
+        frames.append(newframe)
         index += stepper
 
     video.release()

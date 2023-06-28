@@ -14,7 +14,7 @@ server = Server(
     argv[1],
     argv[2],
     keras.optimizers.Adam(),
-    keras.losses.SparseCategoricalCrossentropy(from_logits = True)
+    keras.losses.SparseCategoricalCrossentropy()
 )
 
 server.train(secs = 28, fps = 24, seed = 42)
