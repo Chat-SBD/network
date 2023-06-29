@@ -10,10 +10,8 @@ sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
 from lib.data import get_frames
-
-FPS = 12
-SECS = 12
-FRAMES = FPS * SECS
+from lib.network import dataset
+from lib.CONSTANTS import FRAMES
 
 # representing a layer for the 2+1D network
 class Conv2Plus1D(keras.layers.Layer) :
@@ -152,28 +150,10 @@ x = keras.layers.Flatten()(x)
 x = keras.layers.Dense(4)(x)
 
 model = keras.Model(input, x)
-print('Created model')
+print('----------------------------------------------------Created model--------------------------------------------------')
 
-output_sig = (
-    tf.TensorSpec(shape = (FRAMES, 640, 640, 1), dtype = tf.int16),
-    tf.TensorSpec(shape = (), dtype = tf.int8)
-)
-
-class VideoGen:
-    def __call__(self):
-        yield get_frames('lifts/squat/models/squat-sample.mp4', SECS, FPS), 3
-
-train_ds = tf.data.Dataset.from_generator(
-    VideoGen(),
-    output_signature = output_sig
-)
-train_ds = train_ds.batch(1)
-
-frames, labels = next(iter(train_ds))
-print('Created dataset')
-
-model.build(frames)
-print('Built model')
+model.build(dataset(get_frames('lifts/squat/models/squat-sample.mp4'), 0))
+print('----------------------------------------------------Built model----------------------------------------------------')
 
 model.save('lifts/squat/models/conv21d/model')
-print('Saved model')
+print('----------------------------------------------------Saved model----------------------------------------------------')

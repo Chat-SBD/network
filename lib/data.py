@@ -3,10 +3,15 @@ import numpy as np
 import cv2
 import random
 
+# add below to each file for imports :|
+import os
+import sys
+
+sys.path.append(os.path.abspath(''))
+# add above to each file for imports :|
+
 # constants
-SEED = 42
-SECS = 12
-FPS = 12
+from lib.CONSTANTS import SEED, SECS, FPS
 
 def get_vids(path, seed = SEED):
     """
