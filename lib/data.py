@@ -3,10 +3,15 @@ import numpy as np
 import cv2
 import random
 
+# add below to each file for imports :|
+import os
+import sys
+
+sys.path.append(os.path.abspath(''))
+# add above to each file for imports :|
+
 # constants
-SEED = 42
-SECS = 25
-FPS = 24
+from lib.CONSTANTS import SEED, SECS, FPS
 
 def get_vids(path, seed = SEED):
     """
@@ -43,8 +48,16 @@ def get_frames(path, secs = SECS, fps = FPS):
     while len(frames) < secs * fps:
         video.set(cv2.CAP_PROP_POS_FRAMES, index)
         ret, frame = video.read()
-        
-        frames.append(frame)
+
+        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
+        newframe = []
+        for row in frame:
+            newrow = []
+            for pixel in row:
+                newrow.append([pixel])
+            newframe.append(newrow)
+
+        frames.append(newframe)
         index += stepper
 
     video.release()

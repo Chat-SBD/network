@@ -2,12 +2,16 @@ from glob import glob
 from mpi4py import MPI
 from tensorflow import keras
 
-from lib.data import SEED, SECS, FPS, get_vids, get_frames
-from lib.network import gradient
+# add below to each file for imports :|
+import os
+import sys
 
-# constants
-STATUS = 111
-GRAD = 222
+sys.path.append(os.path.abspath(''))
+# add above to each file for imports :|
+
+from lib.data import get_vids, get_frames
+from lib.network import gradient, dataset
+from lib.CONSTANTS import SEED, SECS, FPS, STATUS, GRAD
 
 class Server:
     def __init__(self, modelfolder, liftfolder, optimizer, lossf):
@@ -75,7 +79,15 @@ class Server:
                 myvid = get_frames(path, secs, fps)
 
                 # send my gradient to master process
-                self.world.send(gradient(self.model, self.lossf, (myvid, lights)), dest = 0, tag = GRAD)
+                self.world.send(
+                    gradient(
+                        self.model,
+                        self.lossf,
+                        dataset(myvid, lights)
+                    ),
+                    dest = 0,
+                    tag = GRAD
+                )
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)

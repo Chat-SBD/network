@@ -1,6 +1,4 @@
 from moviepy.editor import *
-from PIL import Image
-import cv2
 import math
 
 # constants (EVERYTHING BESIDES COLORS MUST BE EDITED BEFORE EACH BATCH)
