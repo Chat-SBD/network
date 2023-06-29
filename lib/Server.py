@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
 from lib.data import get_vids, get_frames
-from lib.network import gradient
+from lib.network import gradient, dataset
 from lib.CONSTANTS import SEED, SECS, FPS, STATUS, GRAD
 
 class Server:
@@ -79,7 +79,15 @@ class Server:
                 myvid = get_frames(path, secs, fps)
 
                 # send my gradient to master process
-                self.world.send(gradient(self.model, self.lossf, (myvid, lights)), dest = 0, tag = GRAD)
+                self.world.send(
+                    gradient(
+                        self.model,
+                        self.lossf,
+                        dataset(myvid, lights)
+                    ),
+                    dest = 0,
+                    tag = GRAD
+                )
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)
