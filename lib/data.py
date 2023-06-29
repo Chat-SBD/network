@@ -5,8 +5,8 @@ import random
 
 # constants
 SEED = 42
-SECS = 28
-FPS = 24
+SECS = 12
+FPS = 12
 
 def get_vids(path, seed = SEED):
     """
