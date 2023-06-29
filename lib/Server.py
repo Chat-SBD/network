@@ -27,7 +27,7 @@ class Server:
             lossf: tensorflow.keras.Loss.
         """
         self.progpath = modelfolder + 'progress'
-        self.modelpath = glob(modelfolder + '*.h5')[0]
+        self.modelpath = modelfolder + 'model'
         self.liftfolder = liftfolder
 
         self.world = MPI.COMM_WORLD
