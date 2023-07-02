@@ -40,25 +40,21 @@ def get_frames(path, secs = SECS, fps = FPS):
         fps: int. Frames per seconds to read in.
     """
     video = cv2.VideoCapture(path)
-    frames = []
+    frames = [None] * secs * fps
 
-    index = 0
+    frames_index = 0
+    video_index = 0
     stepper = int(video.get(cv2.CAP_PROP_FPS) / fps)
     
-    while len(frames) < secs * fps:
-        video.set(cv2.CAP_PROP_POS_FRAMES, index)
+    while frames_index < secs * fps:
+        video.set(cv2.CAP_PROP_POS_FRAMES, video_index)
         ret, frame = video.read()
 
         frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)
-        newframe = []
-        for row in frame:
-            newrow = []
-            for pixel in row:
-                newrow.append([pixel])
-            newframe.append(newrow)
 
-        frames.append(newframe)
-        index += stepper
+        frames[frames_index] = frame
+        video_index += stepper
+        frames_index += 1
 
     video.release()
-    return np.array(frames)
+    return np.expand_dims(np.array(frames), axis = -1)
