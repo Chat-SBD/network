@@ -17,4 +17,4 @@ server = Server(
     keras.losses.SparseCategoricalCrossentropy()
 )
 
-server.train(secs = 28, fps = 24, seed = 42)
+server.train(secs = 12, fps = 12, seed = 42)

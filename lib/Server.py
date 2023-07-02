@@ -40,6 +40,15 @@ class Server:
 
         with open(self.progpath, 'r') as progfile:
             self.start = int(progfile.readline().strip())
+        self.log('Made Server')
+
+        error = 10 / 0
+    
+    def log(self, info):
+        if self.rank == 0:
+            with open('train.log', 'a') as file:
+                file.write(info)
+                file.write('\n')
     
     def progress(self, index):
         """
@@ -62,8 +71,9 @@ class Server:
             fps: int. Frames per second to read in.
             seed: int = SEED. Random seed to shuffle videos with.
         """
-        videos = get_vids(self.liftfolder + 'train/', seed)
+        videos = get_vids(self.liftfolder + 'batch/train/', seed)
         vidindex = self.start
+        self.log('Got videos')
 
         # for each set of videos...
         while vidindex < len(videos):
@@ -76,8 +86,10 @@ class Server:
                 self.world.send(True, dest = 0, tag = STATUS)
 
                 path, lights = videos[myindex]
+                self.log(path)
                 myvid = get_frames(path, secs, fps)
 
+                self.log('Got frames')
                 # send my gradient to master process
                 self.world.send(
                     gradient(
@@ -88,6 +100,7 @@ class Server:
                     dest = 0,
                     tag = GRAD
                 )
+                self.log('Sent')
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)
@@ -104,20 +117,22 @@ class Server:
                         ngrads += 1
                         sumgrad += self.world.recv(source = rank, tag = GRAD)
                 
+                self.log(f'Sum of gradients: {sumgrad}')
+                self.log(f'Number of gradients: {ngrads}')
                 grad = sumgrad / ngrads
                 yield grad
                 vidindex += ngrads
             
             # sync index across all nodes after master updates it
             vidindex = self.world.bcast(vidindex, root = 0)
-
+            print('-----------------------------------------BATCH---------------------------------')
             self.progress(vidindex)
     
     def train(self, secs = SECS, fps = FPS, seed = SEED):
         """
         Train the model. For each gradient from self.gradient, apply it to the model and save it.
         """
-        if self.rank == 0:
-            for gradient in self.gradient(secs, fps, seed):
+        for gradient in self.gradient(secs, fps, seed):
+            if self.rank == 0:
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
                 self.model.save(self.modelpath)
