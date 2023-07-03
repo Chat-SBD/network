@@ -40,15 +40,6 @@ class Server:
 
         with open(self.progpath, 'r') as progfile:
             self.start = int(progfile.readline().strip())
-        self.log('Made Server')
-
-        error = 10 / 0
-    
-    def log(self, info):
-        if self.rank == 0:
-            with open('train.log', 'a') as file:
-                file.write(info)
-                file.write('\n')
     
     def progress(self, index):
         """
@@ -73,7 +64,6 @@ class Server:
         """
         videos = get_vids(self.liftfolder + 'batch/train/', seed)
         vidindex = self.start
-        self.log('Got videos')
 
         # for each set of videos...
         while vidindex < len(videos):
@@ -86,10 +76,8 @@ class Server:
                 self.world.send(True, dest = 0, tag = STATUS)
 
                 path, lights = videos[myindex]
-                self.log(path)
                 myvid = get_frames(path, secs, fps)
 
-                self.log('Got frames')
                 # send my gradient to master process
                 self.world.send(
                     gradient(
@@ -100,7 +88,6 @@ class Server:
                     dest = 0,
                     tag = GRAD
                 )
-                self.log('Sent')
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)
@@ -117,8 +104,6 @@ class Server:
                         ngrads += 1
                         sumgrad += self.world.recv(source = rank, tag = GRAD)
                 
-                self.log(f'Sum of gradients: {sumgrad}')
-                self.log(f'Number of gradients: {ngrads}')
                 grad = sumgrad / ngrads
                 yield grad
                 vidindex += ngrads
