@@ -1,3 +1,4 @@
+import logging as log
 from glob import glob
 from mpi4py import MPI
 from tensorflow import keras
@@ -40,6 +41,12 @@ class Server:
 
         with open(self.progpath, 'r') as progfile:
             self.start = int(progfile.readline().strip())
+        
+        if self.rank == 0:
+            lift = liftfolder.split('/')[-2]
+            model = modelfolder.split('/')[-2]
+            log.warning(f'Created Server with model: {model} and lift: {lift}')
+            log.warning(f'Starting from progress index: {self.start} with seed: {SEED}...')
     
     def progress(self, index):
         """
@@ -51,6 +58,7 @@ class Server:
         if self.rank == 0:
             with open(self.progpath, 'w') as progfile:
                 progfile.write(str(index))
+            log.warning(f'Progress: {index}')
     
     def gradient(self, secs = SECS, fps = FPS, seed = SEED):
         """
@@ -110,7 +118,7 @@ class Server:
             
             # sync index across all nodes after master updates it
             vidindex = self.world.bcast(vidindex, root = 0)
-            print('-----------------------------------------BATCH---------------------------------')
+            log.warning('-----------------------------------------BATCH-----------------------------------------')
             self.progress(vidindex)
     
     def train(self, secs = SECS, fps = FPS, seed = SEED):
@@ -121,3 +129,4 @@ class Server:
             if self.rank == 0:
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
                 self.model.save(self.modelpath)
+                log.warning('Model saved')
