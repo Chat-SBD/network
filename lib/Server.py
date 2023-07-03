@@ -75,6 +75,9 @@ class Server:
 
         # for each set of videos...
         while vidindex < len(videos):
+            # sync processes
+            self.world.Barrier()
+
             # my personal index as a process
             myindex = vidindex + self.rank
 
@@ -85,6 +88,7 @@ class Server:
 
                 path, lights = videos[myindex]
                 myvid = get_frames(path, secs, fps)
+                log.warning(f'Finding gradient on video: {path}...')
 
                 # send my gradient to master process
                 self.world.send(
