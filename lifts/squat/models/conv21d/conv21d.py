@@ -131,19 +131,19 @@ x = keras.layers.ReLU()(x)
 x = ResizeVideo(640 // 2, 640 // 2)(x)
 
 # Block 1
-x = add_residual_block(x, 4, (3, 3, 3))
+x = add_residual_block(x, 8, (3, 3, 3))
 x = ResizeVideo(640 // 4, 640 // 4)(x)
 
 # Block 2
-x = add_residual_block(x, 8, (3, 3, 3))
+x = add_residual_block(x, 16, (3, 3, 3))
 x = ResizeVideo(640 // 8, 640 // 8)(x)
 
 # Block 3
-x = add_residual_block(x, 16, (3, 3, 3))
+x = add_residual_block(x, 32, (3, 3, 3))
 x = ResizeVideo(640 // 16, 640 // 16)(x)
 
 # Block 4
-x = add_residual_block(x, 32, (3, 3, 3))
+x = add_residual_block(x, 64, (3, 3, 3))
 
 x = keras.layers.GlobalAveragePooling3D()(x)
 x = keras.layers.Flatten()(x)

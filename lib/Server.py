@@ -1,6 +1,8 @@
 import logging as log
 from glob import glob
 from mpi4py import MPI
+import tensorflow as tf
+import numpy as np
 from tensorflow import keras
 
 # add below to each file for imports :|
@@ -75,6 +77,9 @@ class Server:
 
         # for each set of videos...
         while vidindex < len(videos):
+            if self.rank == 0:
+                log.warning(f'Batch at index: {vidindex}')
+            
             # sync processes
             self.world.Barrier()
 
@@ -88,41 +93,45 @@ class Server:
 
                 path, lights = videos[myindex]
                 myvid = get_frames(path, secs, fps)
-                log.warning(f'Finding gradient on video: {path}...')
 
-                # send my gradient to master process
-                self.world.send(
-                    gradient(
-                        self.model,
-                        self.lossf,
-                        dataset(myvid, lights)
-                    ),
-                    dest = 0,
-                    tag = GRAD
-                )
+                log.warning(f'Finding gradient on video: {path}...')
+                mygrad = [tensor.numpy() for tensor in gradient(self.model, self.lossf, dataset(myvid, lights))]
+                
+                if self.rank != 0:
+                    # send my gradient to master process
+                    self.world.send(
+                        mygrad,
+                        dest = 0,
+                        tag = GRAD
+                    )
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)
+                
+            grad = 0
 
             # if i am master process...
             if self.rank == 0:
-                ngrads = 0
-                sumgrad = 0
+                ngrads = 1
+                sumgrad = mygrad
 
                 # for each process...
-                for rank in range(self.nprocs):
+                for rank in range(1, self.nprocs):
                     # if that rank processed a gradient...
                     if self.world.recv(source = rank, tag = STATUS):
                         ngrads += 1
-                        sumgrad += self.world.recv(source = rank, tag = GRAD)
+                        theirgrad = self.world.recv(source = rank, tag = GRAD)
+                        sumgrad = [np.add(sumarr, newarr) for sumarr, newarr in zip(sumgrad, theirgrad)]
                 
-                grad = sumgrad / ngrads
-                yield grad
+                grad = [np.divide(sumarr, ngrads) for sumarr in sumgrad]
                 vidindex += ngrads
+            
+            yield grad
             
             # sync index across all nodes after master updates it
             vidindex = self.world.bcast(vidindex, root = 0)
-            log.warning('-----------------------------------------BATCH-----------------------------------------')
+            if self.rank == 0:
+                log.warning('-----------------------------------------BATCH-----------------------------------------')
             self.progress(vidindex)
     
     def train(self, secs = SECS, fps = FPS, seed = SEED):
