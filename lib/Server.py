@@ -99,6 +99,7 @@ class Server:
 
                 log.warning(f'Finding gradient on video: {path}...')
                 mygrad = [tensor.numpy() for tensor in gradient(self.model, self.lossf, dataset(myvid, lights))]
+                log.warning(f'Found gradient')
                 
                 if self.rank != 0:
                     # send my gradient to master process
@@ -143,6 +144,7 @@ class Server:
         """
         for gradient in self.gradient(secs, fps, seed):
             if self.rank == 0:
+                log.warning(f'Applying gradients...')
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
 
                 loss, acc = evaluate(self.model, self.lossf, self.testset)
