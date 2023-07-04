@@ -13,7 +13,7 @@ sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
 from lib.data import get_vids, get_frames
-from lib.network import gradient, dataset
+from lib.network import gradient, dataset, evaluate
 from lib.CONSTANTS import SEED, SECS, FPS, STATUS, GRAD
 
 class Server:
@@ -45,6 +45,9 @@ class Server:
             self.start = int(progfile.readline().strip())
         
         if self.rank == 0:
+            log.warning(f'Loading testing set...')
+            self.testset = [dataset(get_frames(path), lights) for path, lights in get_vids(self.liftfolder + 'batch/test/')]
+
             lift = liftfolder.split('/')[-2]
             model = modelfolder.split('/')[-2]
             log.warning(f'Created Server with model: {model} and lift: {lift}')
@@ -107,7 +110,7 @@ class Server:
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)
-                
+
             grad = 0
 
             # if i am master process...
@@ -141,5 +144,9 @@ class Server:
         for gradient in self.gradient(secs, fps, seed):
             if self.rank == 0:
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
+
+                loss, acc = evaluate(self.model, self.lossf, self.testset)
+                log.warning(f'On testing set - loss: {loss}, accuracy: {acc}')
+
                 self.model.save(self.modelpath)
                 log.warning('Model saved')
