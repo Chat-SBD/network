@@ -36,6 +36,7 @@ class Server:
         self.world = MPI.COMM_WORLD
         self.rank = self.world.Get_rank()
         self.nprocs = self.world.Get_size()
+        self.hostname = MPI.Get_processor_name()
 
         self.model = keras.models.load_model(self.modelpath)
         self.optimizer = optimizer
@@ -44,6 +45,8 @@ class Server:
         with open(self.progpath, 'r') as progfile:
             self.start = int(progfile.readline().strip())
         
+        self.world.Barrier()
+
         if self.rank == 0:
             log.warning(f'Loading testing set...')
             self.testset = [dataset(get_frames(path), lights) for path, lights in get_vids(self.liftfolder + 'batch/test/')]
@@ -52,6 +55,8 @@ class Server:
             model = modelfolder.split('/')[-2]
             log.warning(f'Created Server with model: {model} and lift: {lift}')
             log.warning(f'Starting from progress index: {self.start} with seed: {SEED}...')
+        
+        self.world.Barrier()
     
     def progress(self, index):
         """
@@ -82,9 +87,6 @@ class Server:
         while vidindex < len(videos):
             if self.rank == 0:
                 log.warning(f'Batch at index: {vidindex}')
-            
-            # sync processes
-            self.world.Barrier()
 
             # my personal index as a process
             myindex = vidindex + self.rank
@@ -97,21 +99,26 @@ class Server:
                 path, lights = videos[myindex]
                 myvid = get_frames(path, secs, fps)
 
-                log.warning(f'Finding gradient on video: {path}...')
+                log.warning(f'Host {self.hostname} finding gradient on video: {path}...')
                 mygrad = [tensor.numpy() for tensor in gradient(self.model, self.lossf, dataset(myvid, lights))]
-                log.warning(f'Found gradient')
-                
-                if self.rank != 0:
-                    # send my gradient to master process
-                    self.world.send(
-                        mygrad,
-                        dest = 0,
-                        tag = GRAD
-                    )
+                log.warning(f'Host {self.hostname} found gradient')
             
             else:
                 self.world.send(False, dest = 0, tag = STATUS)
+            
+            # sync before transmitting
+            self.world.Barrier()
 
+            # if i'm not master and i had a video this loop...
+            if self.rank != 0 and myindex < len(videos):
+                # send my gradient to master process
+                self.world.send(
+                    mygrad,
+                    dest = 0,
+                    tag = GRAD
+                )
+
+            # placeholder for non master processes to yield
             grad = 0
 
             # if i am master process...
