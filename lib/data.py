@@ -27,7 +27,7 @@ def get_vids(path, seed = SEED):
     random.seed(seed)
     random.shuffle(videos)
 
-    return list(zip(videos, [int(video.split('_')[1].split('.')[0]) for video in videos]))
+    return list(zip(videos, [0 if int(video.split('_')[1].split('.')[0]) < 2 else 1 for video in videos]))
 
 def get_frames(path, secs = SECS, fps = FPS):
     """

@@ -44,7 +44,7 @@ class Server:
 
         with open(self.progpath, 'r') as progfile:
             self.start = int(progfile.readline().strip())
-        
+
         self.world.Barrier()
 
         if self.rank == 0:
@@ -137,25 +137,26 @@ class Server:
                 grad = [np.divide(sumarr, ngrads) for sumarr in sumgrad]
                 vidindex += ngrads
             
-            yield grad
-            
             # sync index across all nodes after master updates it
             vidindex = self.world.bcast(vidindex, root = 0)
+
+            yield grad
+
             if self.rank == 0:
                 log.warning('-----------------------------------------BATCH-----------------------------------------')
             self.progress(vidindex)
     
-    def train(self, secs = SECS, fps = FPS, seed = SEED):
+    def train(self, epoch, secs = SECS, fps = FPS, seed = SEED):
         """
         Train the model. For each gradient from self.gradient, apply it to the model and save it.
         """
         for gradient in self.gradient(secs, fps, seed):
             if self.rank == 0:
-                log.warning(f'Applying gradients...')
+                log.warning(f'Epoch {epoch}: Applying gradients...')
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
 
                 loss, acc = evaluate(self.model, self.lossf, self.testset)
-                log.warning(f'On testing set - loss: {loss}, accuracy: {acc}')
+                log.warning(f'Epoch {epoch}: On testing set - loss: {loss}, accuracy: {acc}')
 
                 self.model.save(self.modelpath)
-                log.warning('Model saved')
+                log.warning(f'Epoch {epoch}: Model saved')
