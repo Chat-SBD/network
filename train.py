@@ -20,7 +20,7 @@ server = Server(
     keras.losses.SparseCategoricalCrossentropy(from_logits = True)
 )
 
-# we've done 4 epochs so far, going for 10 total
-for epoch in range(4, 11):
-    server.progress(0)
+# we've done 6 epochs so far, going for 10 total
+for epoch in range(6, 11):
     server.train(epoch)
+    server.progress(0)

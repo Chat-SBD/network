@@ -160,3 +160,6 @@ class Server:
 
                 self.model.save(self.modelpath)
                 log.warning(f'Epoch {epoch}: Model saved')
+
+	# no leftover processes before the next epoch
+        self.world.Barrier()
