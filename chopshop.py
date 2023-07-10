@@ -9,15 +9,15 @@ import math
 WHITE = [255, 255, 255]
 RED = [228, 20, 0]
 
-LOC1 = (648, 512)
-LOC2 = (648, 576)
-LOC3 = (648, 627)
+LOC1 = (324, 256)
+LOC2 = (324, 288)
+LOC3 = (324, 314)
 BATCHNUM = 1
 LIFTTYPE = "squat"
 STARTTIME = 15
 
 # initial objects
-mainClip = VideoFileClip("longliftingvideo.mp4").subclip(STARTTIME)
+mainClip = VideoFileClip("testbatch-squat.mp4").subclip(STARTTIME)
 clipseq = 0
 index = 1
 
@@ -43,7 +43,7 @@ while index < mainClip.duration :
         
         #chopping up clips
         newclip = mainClip.subclip(index - SECS - 2, index - 2)
-        newclip = newclip.crop(216, 0, 856, 640)
+        newclip = newclip.crop(108, 0, 428, 320)
         newclip.write_videofile(
             LIFTTYPE + "-batch" + str(BATCHNUM) + "-" + str(clipseq) + "_" + str(whiteNum) + ".mp4",
             fps = 24,
