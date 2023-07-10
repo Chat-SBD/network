@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(''))
 
 from lib.data import get_frames
 from lib.network import dataset
-from lib.CONSTANTS import FRAMES
+from lib.CONSTANTS import FRAMES, SIZE
 
 # representing a layer for the 2+1D network
 class Conv2Plus1D(keras.layers.Layer) :
@@ -121,22 +121,22 @@ class ResizeVideo(keras.layers.Layer):
         return videos
 
 # building the layers of our residual network
-input_shape = (None, FRAMES, 640, 640, 1)
+input_shape = (None, FRAMES, SIZE, SIZE, 1)
 input = keras.layers.Input(shape = (input_shape[1:]))
 x = input
 
 x = Conv2Plus1D(filters = 4, kernel_size = (3, 7, 7), padding = 'same')(x)
 x = keras.layers.BatchNormalization()(x)
 x = keras.layers.ReLU()(x)
-x = ResizeVideo(640 // 2, 640 // 2)(x)
+x = ResizeVideo(SIZE // 2, SIZE // 2)(x)
 
 # Block 1
 x = add_residual_block(x, 4, (3, 3, 3))
-x = ResizeVideo(640 // 4, 640 // 4)(x)
+x = ResizeVideo(SIZE // 4, SIZE // 4)(x)
 
 # Block 2
 x = add_residual_block(x, 8, (3, 3, 3))
-x = ResizeVideo(640 // 8, 640 // 8)(x)
+x = ResizeVideo(SIZE // 8, SIZE // 8)(x)
 
 # Block 3
 x = add_residual_block(x, 16, (3, 3, 3))

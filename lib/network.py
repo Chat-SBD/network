@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
 # constants
-from lib.CONSTANTS import FRAMES
+from lib.CONSTANTS import FRAMES, SIZE
 
 class VideoGen:
     """
@@ -33,7 +33,7 @@ def dataset(frames, lights):
     return next(iter(tf.data.Dataset.from_generator(
         VideoGen(frames, lights),
         output_signature = (
-            tf.TensorSpec(shape = (FRAMES, 640, 640, 1), dtype = tf.int16),
+            tf.TensorSpec(shape = (FRAMES, SIZE, SIZE, 1), dtype = tf.int16),
             tf.TensorSpec(shape = (), dtype = tf.int8)
         )
     ).batch(1)))

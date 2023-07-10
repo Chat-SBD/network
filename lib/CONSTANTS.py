@@ -1,5 +1,6 @@
 # random seed for shuffling
 SEED = 42
+SIZE = 320
 SECS = 12
 FPS = 8
 FRAMES = SECS * FPS

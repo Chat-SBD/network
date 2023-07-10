@@ -1,3 +1,4 @@
+import math
 import logging as log
 from glob import glob
 from mpi4py import MPI
@@ -29,7 +30,6 @@ class Server:
             optimizer: tensorflow.keras.Optimizer.
             lossf: tensorflow.keras.Loss.
         """
-        self.progpath = modelfolder + 'progress'
         self.modelpath = modelfolder + 'model'
         self.liftfolder = liftfolder
 
@@ -42,33 +42,21 @@ class Server:
         self.optimizer = optimizer
         self.lossf = lossf
 
-        with open(self.progpath, 'r') as progfile:
-            self.start = int(progfile.readline().strip())
-
         self.world.Barrier()
 
         if self.rank == 0:
-            log.warning(f'Loading testing set...')
+            log.warning('Loading testing set...')
             self.testset = [dataset(get_frames(path), lights) for path, lights in get_vids(self.liftfolder + 'batch/test/')]
+
+            log.warning('Loading checking set...')
+            self.checkset = [dataset(get_frames(path), lights) for path, lights in get_vids(self.liftfolder + 'batch/check/')]
 
             lift = liftfolder.split('/')[-2]
             model = modelfolder.split('/')[-2]
             log.warning(f'Created Server with model: {model} and lift: {lift}')
-            log.warning(f'Starting from progress index: {self.start} with seed: {SEED}...')
+            log.warning(f'Using seed: {SEED}...')
         
         self.world.Barrier()
-    
-    def progress(self, index):
-        """
-        Write a number to a file. Only the master process (rank 0) can execute, to limit IO.
-
-        Args:
-            index: any. The int, usually, to overwrite to the file.
-        """
-        if self.rank == 0:
-            with open(self.progpath, 'w') as progfile:
-                progfile.write(str(index))
-            log.warning(f'Progress: {index}')
     
     def gradient(self, secs = SECS, fps = FPS, seed = SEED):
         """
@@ -81,12 +69,18 @@ class Server:
             seed: int = SEED. Random seed to shuffle videos with.
         """
         videos = get_vids(self.liftfolder + 'batch/train/', seed)
-        vidindex = self.start
+        vidindex = 0
+
+        nbatchs = int(math.ceil(len(videos) / self.nprocs))
 
         # for each set of videos...
         while vidindex < len(videos):
+            self.world.Barrier()
+            batch = int(vidindex / self.nprocs) + 1
+
             if self.rank == 0:
-                log.warning(f'Batch at index: {vidindex}')
+                log.warning(f'STARTING BATCH {batch}/{nbatchs}')
+                log.warning(f'Video index: {vidindex} of {len(videos)}')
 
             # my personal index as a process
             myindex = vidindex + self.rank
@@ -137,16 +131,12 @@ class Server:
                 grad = [np.divide(sumarr, ngrads) for sumarr in sumgrad]
                 vidindex += ngrads
             
-            # sync index across all nodes after master updates it
-            vidindex = self.world.bcast(vidindex, root = 0)
-
             yield grad
 
-            if self.rank == 0:
-                log.warning('-----------------------------------------BATCH-----------------------------------------')
-            self.progress(vidindex)
+            # sync index across all nodes after master updates it
+            vidindex = self.world.bcast(vidindex, root = 0)
     
-    def train(self, epoch, secs = SECS, fps = FPS, seed = SEED):
+    def epoch(self, epoch, secs = SECS, fps = FPS, seed = SEED):
         """
         Train the model. For each gradient from self.gradient, apply it to the model and save it.
         """
@@ -155,11 +145,29 @@ class Server:
                 log.warning(f'Epoch {epoch}: Applying gradients...')
                 self.optimizer.apply_gradients(zip(gradient, self.model.trainable_weights))
 
+                loss, acc = evaluate(self.model, self.lossf, self.checkset)
+                log.warning(f'Epoch {epoch}: On checking set - loss: {loss}, accuracy: {acc}')
+
                 loss, acc = evaluate(self.model, self.lossf, self.testset)
                 log.warning(f'Epoch {epoch}: On testing set - loss: {loss}, accuracy: {acc}')
 
                 self.model.save(self.modelpath)
                 log.warning(f'Epoch {epoch}: Model saved')
+            
+            # sync and reload model
+            self.world.Barrier()
+            if self.rank == 0:
+                log.warning('Reloading model...')
+            self.model = keras.models.load_model(self.modelpath)
 
-	# no leftover processes before the next epoch
+	    # no leftover processes before the next epoch
         self.world.Barrier()
+
+    def train(self, epochs = 10):
+        for epoch in range(epochs):
+            epoch = epoch + 1
+
+            if self.rank == 0:
+                log.warning(f'STARTING EPOCH {epoch}/{epochs}...')
+
+            self.epoch(epoch, secs = SECS, fps = FPS, seed = epoch * 2)

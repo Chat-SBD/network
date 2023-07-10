@@ -2,8 +2,8 @@
 # `mpiexec -n 10 -f machinefile <command> <command args...>`
 # to test cluster connection: `mpiexec -n 10 -f machinefile python3 flops.py 5`
 
-beowulf:2
-node1:1
-node2:1
-node3:1
-node4:1
+beowulf:4
+node1:2
+node2:2
+node3:2
+node4:2
