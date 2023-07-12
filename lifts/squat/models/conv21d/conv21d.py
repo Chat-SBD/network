@@ -146,11 +146,18 @@ x = keras.layers.Flatten()(x)
 x = keras.layers.Dense(2)(x)
 
 model = keras.Model(input, x)
-print('---------------------------------------------------Created model---------------------------------------------------')
+print('Created model...')
+
+model.compile(
+    optimizer = keras.optimizers.Adam(),
+    loss = keras.losses.SparseCategoricalCrossentropy(),
+    metrics = [keras.metrics.SparseCategoricalAccuracy()]
+)
+print('Compiled model...')
 
 model.build(dataset(get_frames('lifts/squat/models/squat-sample.mp4'), 0))
-print('----------------------------------------------------Built model----------------------------------------------------')
+print('Built model...')
 
 model.save('lifts/squat/models/conv21d/model')
 keras.utils.plot_model(model, to_file = 'lifts/squat/models/conv21d/conv21d.png', show_shapes = True)
-print('----------------------------------------------------Saved model----------------------------------------------------')
+print('Saved model')

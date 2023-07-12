@@ -1,9 +1,0 @@
-# each node has 2 cores - running 2 processes on each for 10 total is optimal
-# `mpiexec -n 10 -f machinefile <command> <command args...>`
-# to test cluster connection: `mpiexec -n 10 -f machinefile python3 flops.py 5`
-
-beowulf:4
-node1:2
-node2:2
-node3:2
-node4:2
