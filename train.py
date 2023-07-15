@@ -29,8 +29,8 @@ y_test = np.array([lights for path, lights in test])
 model.fit(
     x = x_test,
     y = y_test,
-    batch_size = 8,
-    epochs = 10,
+    batch_size = len(train),
+    epochs = 50,
     validation_data = (x_test, y_test)
 )
 

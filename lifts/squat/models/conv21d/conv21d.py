@@ -143,7 +143,7 @@ x = add_residual_block(x, 16, (3, 3, 3))
 
 x = keras.layers.GlobalAveragePooling3D()(x)
 x = keras.layers.Flatten()(x)
-x = keras.layers.Dense(2)(x)
+x = keras.layers.Dense(4)(x)
 
 model = keras.Model(input, x)
 print('Created model...')
