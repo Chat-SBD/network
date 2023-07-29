@@ -1,7 +1,8 @@
 # random seed for shuffling
 SEED = 42
+SIZE = 320
 SECS = 12
-FPS = 12
+FPS = 8
 FRAMES = SECS * FPS
 # status MPI message tag
 STATUS = 111
