@@ -9,7 +9,7 @@ sys.path.append(os.path.abspath(''))
 
 from lib.CONSTANTS import FRAMES, SIZE
 FILTERS = 3
-POOL = 8
+POOL = 16
 
 model = keras.Sequential([
     keras.Input(shape = (FRAMES, SIZE, SIZE, 1)),
