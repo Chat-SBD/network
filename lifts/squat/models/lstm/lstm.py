@@ -9,6 +9,7 @@ sys.path.append(os.path.abspath(''))
 
 from lib.CONSTANTS import FRAMES, SIZE
 FILTERS = 3
+POOL = 8
 
 model = keras.Sequential([
     keras.Input(shape = (FRAMES, SIZE, SIZE, 1)),
@@ -21,10 +22,10 @@ model = keras.Sequential([
         )
     ),
     keras.layers.TimeDistributed(
-        keras.layers.MaxPooling2D(pool_size = (10, 10))
+        keras.layers.MaxPooling2D(pool_size = (POOL, POOL))
     ),
     keras.layers.BatchNormalization(),
-    keras.layers.Reshape((96, int((SIZE / 10) * (SIZE / 10) * FILTERS))),
+    keras.layers.Reshape((96, int((SIZE / POOL) * (SIZE / POOL) * FILTERS))),
     keras.layers.LSTM(
         units = 1000,
         time_major = False
