@@ -7,15 +7,25 @@ import sys
 sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
-from lib.data import get_frames
-from lib.network import dataset
 from lib.CONSTANTS import FRAMES, SIZE
-
-vid_shape = (FRAMES, SIZE, SIZE, 1)
+FILTERS = 3
+POOL = 20
 
 model = keras.Sequential([
-    keras.Input(shape = vid_shape),
-    keras.layers.Reshape((96, SIZE * SIZE), input_shape = vid_shape),
+    keras.Input(shape = (FRAMES, SIZE, SIZE, 1)),
+    keras.layers.TimeDistributed(
+        keras.layers.Conv2D(
+            filters = FILTERS,
+            kernel_size = (3, 3),
+            input_shape = (SIZE, SIZE, 1),
+            padding = 'same'
+        )
+    ),
+    keras.layers.TimeDistributed(
+        keras.layers.MaxPooling2D(pool_size = (POOL, POOL))
+    ),
+    keras.layers.BatchNormalization(),
+    keras.layers.Reshape((96, int((SIZE / POOL) * (SIZE / POOL) * FILTERS))),
     keras.layers.LSTM(
         units = 1000,
         time_major = False
