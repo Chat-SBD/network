@@ -3,59 +3,77 @@ Train a model on a batch, just normally without any parallel work
 
 Args:
     1: str. The path to the saved model folder. 'lifts/squat/models/conv21d/'
-    2: str. The path to the lift folder. 'lifts/squat/'
 """
 import os
+import json
 from sys import argv
-from tensorflow import keras
-import numpy as np
-from numpy import random
+from tensorflow import keras, distribute
+import tensorflow as tf
+from mpi4py import MPI
+import logging
+from time import sleep
 
-from lib.data import get_vids, get_frames, train_test_val, expand
+from lib.network import FrameGenerator
 
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
+SAVEPATH = argv[1] + 'model/'
+DSPATH = '/'.join(argv[1].split('/')[: 2]) + '/dataset/'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
 
-model = keras.models.load_model(argv[1] + 'model/')
+world = MPI.COMM_WORLD
+rank = world.Get_rank()
+name = MPI.Get_processor_name()
+nprocs = world.Get_size()
 
-print('Loading video paths...')
-data = get_vids(argv[2] + 'batch/')
-x = np.array([path for path, lights in data])
-y = np.array([lights for path, lights in data])
-print(f'{len(x)} paths loaded')
+logging.warning(f'{name}:Setting TF_CONFIG...')
 
-print('Expanding...')
-x, y = expand(x, y)
-print(f'Expanded to {len(x)} paths')
+os.environ['TF_CONFIG'] = json.dumps({
+    'cluster': {
+        'worker': ['beowulf:12624', 'node1:12624', 'node2:12624', 'node3:12624', 'node4:12624']
+    },
+    'task': {
+        'type': 'worker',
+        'index': rank
+    }
+})
+sleep(15)
+world.Barrier()
 
-print('Shuffling...')
-random.seed(42)
-random.shuffle(x)
-random.seed(42)
-random.shuffle(y)
+logging.warning(f'{name}:Starting strategy...')
+strategy = distribute.MultiWorkerMirroredStrategy()
+world.Barrier()
 
-print('Splitting...')
-x_train, y_train, x_test, y_test, x_val, y_val = train_test_val(x, y)
+logging.warning(f'{name}:Loading model...')
+with strategy.scope():
+    model = keras.models.load_model(SAVEPATH)
+world.Barrier()
 
-print('Loading video data...')
-videos = [get_frames(path) for path in x]
-videos_paths = dict(zip(x, videos))
-
-x_train = np.array([videos_paths[path] for path in x_train])
-x_test = np.array([videos_paths[path] for path in x_test])
-x_val = np.array([videos_paths[path] for path in x_val])
+logging.warning(f'{name}:Building datasets...')
+outsig = (
+    tf.TensorSpec(shape = (None, None, None, 1), dtype = tf.int16),
+    tf.TensorSpec(shape = (), dtype = tf.int16)
+)
+ds_train = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'train'), output_signature = outsig)
+ds_test = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'test'), output_signature = outsig)
+ds_val = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'val'), output_signature = outsig)
+world.Barrier()
 
 model.fit(
-    x = x_train,
-    y = y_train,
-    epochs = 10,
-    validation_data = (x_val, y_val)
+    x = ds_train,
+    epochs = 2,
+    validation_data = ds_val
 )
+world.Barrier()
 
-print('Evaluating...')
+logging.warning(f'{name}:Evaluating...')
 model.evaluate(
-    x = x_test,
-    y = y_test
+    x = ds_test
 )
+world.Barrier()
 
-model.save(argv[1] + 'model/')
-print('Saved model')
+logging.warning(f'{name}:Saving...')
+if rank == 0:
+    model.save(SAVEPATH)
+else:
+    model.save('/tmp/model')
+logging.warning(f'{name}:Saved model')
+world.Barrier()

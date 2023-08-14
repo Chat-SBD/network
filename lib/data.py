@@ -13,19 +13,15 @@ sys.path.append(os.path.abspath(''))
 # constants
 from lib.CONSTANTS import SEED, SIZE, SECS, FPS, TEST_SIZE, VAL_SIZE
 
-def get_vids(path, seed = SEED):
+def get_vids(path):
     """
     Gets an array of tuples of full relative video path and number of white lights
     [('batch/train/squat-batch1-18_2', 2), (...]
 
     Args:
         path: str. 'batch/train/' or 'batch/test/', whichever is being used.
-        seed: int, 0-100. Random seed for video shuffling.
     """
     videos = glob(path + '*.mp4')
-
-    random.seed(seed)
-    random.shuffle(videos)
 
     #return list(zip(videos, [0 if int(video.split('_')[1].split('.')[0]) < 2 else 1 for video in videos]))
     return list(zip(videos, [int(video.split('_')[1].split('.')[0]) for video in videos]))
