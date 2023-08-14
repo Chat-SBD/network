@@ -96,7 +96,7 @@ def expand(x, y):
     unique, counts = np.unique(y, return_counts = True)
     max_unique = np.max(counts)
 
-    new_x = np.ndarray(shape = (0, FPS * SECS, SIZE, SIZE, 1))
+    new_x = np.ndarray(shape = (0))
     new_y = np.ndarray(shape = (0))
 
     # for each unique category...

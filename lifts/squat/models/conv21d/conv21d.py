@@ -119,44 +119,47 @@ class ResizeVideo(keras.layers.Layer):
             t = old_shape['t'])
         return videos
 
-# building the layers of our residual network
-input_shape = (None, FRAMES, SIZE, SIZE, 1)
-input = keras.layers.Input(shape = (input_shape[1:]))
-x = input
+def make():
+    # building the layers of our residual network
+    input_shape = (None, FRAMES, SIZE, SIZE, 1)
+    input = keras.layers.Input(shape = (input_shape[1:]))
+    x = input
 
-x = Conv2Plus1D(filters = 4, kernel_size = (3, 7, 7), padding = 'same')(x)
-x = keras.layers.BatchNormalization()(x)
-x = keras.layers.ReLU()(x)
-x = ResizeVideo(SIZE // 2, SIZE // 2)(x)
+    x = Conv2Plus1D(filters = 4, kernel_size = (3, 7, 7), padding = 'same')(x)
+    x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.ReLU()(x)
+    x = ResizeVideo(SIZE // 2, SIZE // 2)(x)
 
-# Block 1
-x = add_residual_block(x, 4, (3, 3, 3))
-x = ResizeVideo(SIZE // 4, SIZE // 4)(x)
+    # Block 1
+    x = add_residual_block(x, 4, (3, 3, 3))
+    x = ResizeVideo(SIZE // 4, SIZE // 4)(x)
 
-# Block 2
-x = add_residual_block(x, 8, (3, 3, 3))
-x = ResizeVideo(SIZE // 8, SIZE // 8)(x)
+    # Block 2
+    x = add_residual_block(x, 8, (3, 3, 3))
+    x = ResizeVideo(SIZE // 8, SIZE // 8)(x)
 
-# Block 3
-x = add_residual_block(x, 16, (3, 3, 3))
+    # Block 3
+    x = add_residual_block(x, 16, (3, 3, 3))
 
-x = keras.layers.GlobalAveragePooling3D()(x)
-x = keras.layers.Flatten()(x)
-x = keras.layers.Dense(4)(x)
+    x = keras.layers.GlobalAveragePooling3D()(x)
+    x = keras.layers.Flatten()(x)
+    x = keras.layers.Dense(4)(x)
 
-model = keras.Model(input, x)
-print('Created model...')
+    model = keras.Model(input, x)
+    print('Created model...')
 
-model.compile(
-    optimizer = keras.optimizers.Adam(),
-    loss = keras.losses.SparseCategoricalCrossentropy(),
-    metrics = [keras.metrics.SparseCategoricalAccuracy()]
-)
-print('Compiled model...')
+    model.compile(
+        optimizer = keras.optimizers.Adam(),
+        loss = keras.losses.SparseCategoricalCrossentropy(),
+        metrics = [keras.metrics.SparseCategoricalAccuracy()]
+    )
+    print('Compiled model...')
 
-model.build(dataset(get_frames('lifts/squat/models/squat-sample.mp4'), 0))
-print('Built model...')
+    model.build(dataset(get_frames('lifts/squat/models/squat-sample.mp4'), 0))
+    print('Built model...')
 
-model.save('lifts/squat/models/conv21d/model')
-keras.utils.plot_model(model, to_file = 'lifts/squat/models/conv21d/conv21d.png', show_shapes = True)
-print('Saved model')
+    return model
+
+#model.save('lifts/squat/models/conv21d/model')
+#keras.utils.plot_model(model, to_file = 'lifts/squat/models/conv21d/conv21d.png', show_shapes = True)
+#print('Saved model')
