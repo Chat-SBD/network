@@ -48,7 +48,7 @@ while index < ENDTIME :
         newclip = mainClip.subclip(index - SECS - 2, index - 2)
         newclip = newclip.crop(x1 = 170, y1 = 40, x2 = 490, y2 = 360)
         newclip.write_videofile(
-            LIFTTYPE + "-batch" + str(BATCHNUM) + "-" + str(clipseq) + "_" + str(whiteNum) + ".mp4",
+            LIFTTYPE + "-vid" + str(BATCHNUM) + "-" + str(clipseq) + "_" + str(whiteNum) + ".mp4",
             fps = 24,
             audio = False,
             threads = 10,
