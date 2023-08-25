@@ -154,7 +154,7 @@ model.compile(
 )
 print('Compiled model...')
 
-model.build(dataset(get_frames('lifts/squat/models/squat-sample.mp4'), 0))
+model.build(dataset(get_frames('lifts/squat/dataset/squat-batch1-0_1.mp4'), 0))
 print('Built model...')
 
 model.save('lifts/squat/models/conv21d/model')
