@@ -14,10 +14,11 @@ import logging
 from time import sleep
 
 from lib.network import FrameGenerator
+from lib.CONSTANTS import FRAMES, SIZE
 
 SAVEPATH = argv[1] + 'model/'
 DSPATH = '/'.join(argv[1].split('/')[: 2]) + '/dataset/'
-os.environ['TF_CPP_MIN_LOG_LEVEL'] = '0'
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
 world = MPI.COMM_WORLD
 rank = world.Get_rank()
@@ -28,14 +29,13 @@ logging.warning(f'{name}:Setting TF_CONFIG...')
 
 os.environ['TF_CONFIG'] = json.dumps({
     'cluster': {
-        'worker': ['beowulf:12624', 'node1:12624', 'node2:12624', 'node3:12624', 'node4:12624']
+        'worker': ['beowulf:8080', 'node1:8080', 'node2:8080', 'node3:8080', 'node4:8080']
     },
     'task': {
         'type': 'worker',
         'index': rank
     }
 })
-sleep(15)
 world.Barrier()
 
 logging.warning(f'{name}:Starting strategy...')
@@ -49,24 +49,30 @@ world.Barrier()
 
 logging.warning(f'{name}:Building datasets...')
 outsig = (
-    tf.TensorSpec(shape = (None, None, None, 1), dtype = tf.int16),
+    tf.TensorSpec(shape = (FRAMES, SIZE, SIZE, 1), dtype = tf.int16),
     tf.TensorSpec(shape = (), dtype = tf.int16)
 )
 ds_train = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'train'), output_signature = outsig)
 ds_test = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'test'), output_signature = outsig)
 ds_val = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'val'), output_signature = outsig)
+
+ds_train = ds_train.batch(5)
+ds_test = ds_test.batch(5)
+ds_val = ds_val.batch(5)
 world.Barrier()
 
 model.fit(
     x = ds_train,
     epochs = 2,
+    verbose = 0 if rank != 0 else 1,
     validation_data = ds_val
 )
 world.Barrier()
 
 logging.warning(f'{name}:Evaluating...')
 model.evaluate(
-    x = ds_test
+    x = ds_test,
+    verbose = 0 if rank != 0 else 1
 )
 world.Barrier()
 
@@ -76,4 +82,3 @@ if rank == 0:
 else:
     model.save('/tmp/model')
 logging.warning(f'{name}:Saved model')
-world.Barrier()
