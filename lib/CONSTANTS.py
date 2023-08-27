@@ -1,7 +1,7 @@
 # random seed for shuffling
 SEED = 42
-SIZE = 320
-SECS = 12
+SIZE = 300
+SECS = 8
 FPS = 8
 TEST_SIZE = 0.2
 VAL_SIZE = 0.1

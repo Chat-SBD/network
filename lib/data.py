@@ -11,7 +11,7 @@ sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
 # constants
-from lib.CONSTANTS import SEED, SIZE, SECS, FPS, TEST_SIZE, VAL_SIZE
+from lib.CONSTANTS import SECS, FPS, TEST_SIZE, VAL_SIZE
 
 def get_vids(path):
     """
