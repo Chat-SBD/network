@@ -7,24 +7,24 @@ WHITE = [255, 255, 255]
 RED = [228, 20, 0]
 
 # (y, x)
-LOC1 = (305, 288)
-LOC2 = (305, 313)
-LOC3 = (305, 338)
-BATCHNUM = 8
+LOC1 = (283, 112)
+LOC2 = (283, 131)
+LOC3 = (283, 150)
+BATCHNUM = 12
 LIFTTYPE = "squat"
-STARTTIME = 2160
-OFFSET = 4
+STARTTIME = 1140
+OFFSET = 2
 
 # upper left corner of crop
-X1 = 170
-Y1 = 4
+X1 = 175
+Y1 = 5
 
 # initial objects
-mainClip = VideoFileClip("C:/Users/samed/Downloads/videoplayback (4).mp4").subclip(STARTTIME)
+mainClip = VideoFileClip("C:/Users/samed/Downloads/videoplayback (10).mp4").subclip(STARTTIME)
 clipseq = 0
 index = 1
 
-ENDTIME = 5880
+ENDTIME = 5700
 #ENDTIME = mainClip.duration
 
 def redorwhite(arg) :
