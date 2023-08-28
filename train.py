@@ -56,14 +56,14 @@ ds_train = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'train'), outpu
 ds_test = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'test'), output_signature = outsig)
 ds_val = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'val'), output_signature = outsig)
 
-ds_train = ds_train.batch(5)
-ds_test = ds_test.batch(5)
-ds_val = ds_val.batch(5)
+ds_train = ds_train.batch(100)
+ds_test = ds_test.batch(100)
+ds_val = ds_val.batch(100)
 world.Barrier()
 
 model.fit(
     x = ds_train,
-    epochs = 2,
+    epochs = 10,
     verbose = 0 if rank != 0 else 1,
     validation_data = ds_val
 )
