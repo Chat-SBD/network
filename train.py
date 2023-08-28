@@ -63,7 +63,7 @@ world.Barrier()
 
 model.fit(
     x = ds_train,
-    epochs = 10,
+    epochs = 20,
     verbose = 0 if rank != 0 else 1,
     validation_data = ds_val
 )
