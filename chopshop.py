@@ -7,25 +7,25 @@ WHITE = [255, 255, 255]
 RED = [228, 20, 0]
 
 # (y, x)
-LOC1 = (283, 112)
-LOC2 = (283, 131)
-LOC3 = (283, 150)
-BATCHNUM = 12
-LIFTTYPE = "squat"
-STARTTIME = 1140
-OFFSET = 2
+LOC1 = (305, 288)
+LOC2 = (305, 312)
+LOC3 = (305, 337)
+BATCHNUM = 8
+LIFTTYPE = "deadlift"
+STARTTIME = 10156
+OFFSET = 1
 
 # upper left corner of crop
-X1 = 175
-Y1 = 5
+X1 = 166
+Y1 = 11
 
 # initial objects
-mainClip = VideoFileClip("C:/Users/samed/Downloads/videoplayback (10).mp4").subclip(STARTTIME)
+mainClip = VideoFileClip("C:/Users/samed/Downloads/videoplayback (5).mp4").subclip(STARTTIME)
 clipseq = 0
 index = 1
 
-ENDTIME = 5700
-#ENDTIME = mainClip.duration
+#ENDTIME = 9480
+ENDTIME = STARTTIME + mainClip.duration
 
 def redorwhite(arg) :
     return math.dist(arg, WHITE) < 10 or math.dist(arg, RED) < 50
