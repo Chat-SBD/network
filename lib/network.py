@@ -1,5 +1,3 @@
-import tensorflow as tf
-from tensorflow import keras
 from numpy import random
 
 # add below to each file for imports :|
@@ -9,8 +7,7 @@ import sys
 sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
-from lib.CONSTANTS import FPS, SECS, FRAMES, SIZE, TEST_SIZE, VAL_SIZE
-from lib.data import get_vids, expand, train_test_val, get_frames, compress
+from lib.data import get_vids, train_test_val, get_frames, compress
 
 class FrameGenerator:
     """
@@ -24,8 +21,6 @@ class FrameGenerator:
         paths_lights = get_vids(path)
         x = [path for path, lights in paths_lights]
         y = [lights for path, lights in paths_lights]
-
-        #x, y = compress(x, y)
 
         random.seed(42)
         random.shuffle(x)

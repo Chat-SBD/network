@@ -1,7 +1,8 @@
 from glob import glob
 import numpy as np
 import cv2
-import random
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 # add below to each file for imports :|
 import os
@@ -80,52 +81,6 @@ def train_test_val(x, y, test_size = TEST_SIZE, val_size = VAL_SIZE):
 
     return x_train, y_train, x_test, y_test, x_val, y_val
 
-def expand(x, y):
-    """
-    Duplicate data in x and y to make sure that each category is the same size.
-    Returns x, y expanded.
-    Keep in mind that the data will be organized throughout the arrays into each category,
-    and will need to be re-shuffled.
-
-    Args:
-        x: array. Data to be classified.
-        y: array. Corresponding classification labels.
-    """
-    unique, counts = np.unique(y, return_counts = True)
-    max_unique = np.max(counts)
-
-    new_x = np.ndarray(shape = (0))
-    new_y = np.ndarray(shape = (0))
-
-    # for each unique category...
-    for cat in unique:
-        expanded = []
-
-        videos = []
-        index = 0
-        # for each video in x...
-        while index < len(x):
-            # if that video is in the category...
-            if y[index] == cat:
-                videos.append(x[index])
-            index += 1
-        
-        # while the expanded category array is not long enough...
-        while len(expanded) < max_unique:
-            # for each video in that category...
-            for video in videos:
-                # if the expanded array is STILL not long enough yet...
-                if len(expanded) < max_unique:
-                    expanded.append(video)
-                else:
-                    break
-        
-        # add the expanded array to the full expanded x, and to y
-        new_x = np.concatenate((new_x, np.array(expanded)), axis = 0)
-        new_y = np.concatenate((new_y, np.array([cat] * len(expanded))), axis = 0)
-    
-    return new_x, new_y
-
 def compress(x, y):
     """
     Like expand, but instead of duplicating data, it removes data.
@@ -171,3 +126,30 @@ def compress(x, y):
         new_y = np.concatenate((new_y, np.array([cat] * len(expanded))), axis = 0)
     
     return new_x, new_y
+
+def acc(actual_values, predicted_values):
+    correct_predictions = 0
+
+    for actual, predicted in zip(actual_values, predicted_values):
+        if int(actual) == int(predicted):
+            correct_predictions += 1
+
+    accuracy = correct_predictions / len(actual_values)
+    return accuracy
+
+def plot_cm(conf_matrix, class_names, filename):
+    plt.figure(figsize = (8, 6))
+    sns.set(font_scale = 1.2)
+    sns.heatmap(
+        conf_matrix,
+        annot = True,
+        fmt = "d",
+        cmap = "Blues",
+        xticklabels = class_names,
+        yticklabels = class_names
+    )
+    plt.xlabel('Predicted')
+    plt.ylabel('Actual')
+    plt.title('Confusion Matrix')
+    plt.savefig(filename)
+    plt.close()
