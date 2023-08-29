@@ -25,7 +25,7 @@ class FrameGenerator:
         x = [path for path, lights in paths_lights]
         y = [lights for path, lights in paths_lights]
 
-        x, y = compress(x, y)
+        #x, y = compress(x, y)
 
         random.seed(42)
         random.shuffle(x)
@@ -41,6 +41,7 @@ class FrameGenerator:
         elif portion == 'test':
             self.x = x_test
             self.y = y_test
+            self.x, self.y = compress(self.x, self.y)
         
         elif portion == 'val':
             self.x = x_val
