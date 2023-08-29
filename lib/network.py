@@ -44,7 +44,7 @@ class FrameGenerator:
             self.x = x_val
             self.y = y_val
         
-        self.x, self.y = expand(self.x, self.y)
+        #self.x, self.y = expand(self.x, self.y)
     
     def __call__(self):
         for x, y in zip(self.x, self.y):
