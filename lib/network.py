@@ -10,7 +10,7 @@ sys.path.append(os.path.abspath(''))
 # add above to each file for imports :|
 
 from lib.CONSTANTS import FPS, SECS, FRAMES, SIZE, TEST_SIZE, VAL_SIZE
-from lib.data import get_vids, expand, train_test_val, get_frames
+from lib.data import get_vids, expand, train_test_val, get_frames, compress
 
 class FrameGenerator:
     """
@@ -25,6 +25,8 @@ class FrameGenerator:
         x = [path for path, lights in paths_lights]
         y = [lights for path, lights in paths_lights]
 
+        x, y = compress(x, y)
+
         random.seed(42)
         random.shuffle(x)
         random.seed(42)
@@ -35,7 +37,6 @@ class FrameGenerator:
         if portion == 'train':
             self.x = x_train
             self.y = y_train
-            self.x, self.y = expand(self.x, self.y)
         
         elif portion == 'test':
             self.x = x_test
