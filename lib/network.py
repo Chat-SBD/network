@@ -35,6 +35,7 @@ class FrameGenerator:
         if portion == 'train':
             self.x = x_train
             self.y = y_train
+            self.x, self.y = expand(self.x, self.y)
         
         elif portion == 'test':
             self.x = x_test
@@ -43,8 +44,6 @@ class FrameGenerator:
         elif portion == 'val':
             self.x = x_val
             self.y = y_val
-        
-        #self.x, self.y = expand(self.x, self.y)
     
     def __call__(self):
         for x, y in zip(self.x, self.y):
