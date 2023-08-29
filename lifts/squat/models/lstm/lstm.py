@@ -25,7 +25,7 @@ model = keras.Sequential([
         keras.layers.MaxPooling2D(pool_size = (POOL, POOL))
     ),
     keras.layers.BatchNormalization(),
-    keras.layers.Reshape((96, int((SIZE / POOL) * (SIZE / POOL) * FILTERS))),
+    keras.layers.Reshape((FRAMES, int((SIZE / POOL) * (SIZE / POOL) * FILTERS))),
     keras.layers.LSTM(
         units = 1000,
         time_major = False

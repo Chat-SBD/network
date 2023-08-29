@@ -1,5 +1,5 @@
 """
-Train a model on a batch, just normally without any parallel work
+Train a model on a batch, just normally without any parallel work.
 
 Args:
     1: str. The path to the saved model folder. 'lifts/squat/models/conv21d/'
@@ -11,7 +11,6 @@ from tensorflow import keras, distribute
 import tensorflow as tf
 from mpi4py import MPI
 import logging
-from time import sleep
 
 from lib.network import FrameGenerator
 from lib.CONSTANTS import FRAMES, SIZE
@@ -56,23 +55,16 @@ ds_train = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'train'), outpu
 ds_test = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'test'), output_signature = outsig)
 ds_val = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'val'), output_signature = outsig)
 
-ds_train = ds_train.batch(5)
-ds_test = ds_test.batch(5)
-ds_val = ds_val.batch(5)
+ds_train = ds_train.batch(100)
+ds_test = ds_test.batch(100)
+ds_val = ds_val.batch(100)
 world.Barrier()
 
 model.fit(
     x = ds_train,
-    epochs = 2,
+    epochs = 20,
     verbose = 0 if rank != 0 else 1,
     validation_data = ds_val
-)
-world.Barrier()
-
-logging.warning(f'{name}:Evaluating...')
-model.evaluate(
-    x = ds_test,
-    verbose = 0 if rank != 0 else 1
 )
 world.Barrier()
 
