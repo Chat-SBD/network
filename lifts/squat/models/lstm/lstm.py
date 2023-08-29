@@ -30,7 +30,7 @@ model = keras.Sequential([
         units = 1000,
         time_major = False
     ),
-    keras.layers.Dense(units = 4, activation = 'softmax')
+    keras.layers.Dense(units = 2, activation = 'softmax')
 ])
 print('Created model...')
 
