@@ -23,9 +23,9 @@ model/ - Holds the neural network model.
 Per Batch:
 
 1. Developer creates a new branch with the batch number and description of new data, if applicable (ex: '12_multiple-angles').
-2. `chopshop.py` is run, possibly on a few different meet videos.
-3. The resulting videos in `/test` and `/train` are checked for quality.
-4. The videos are committed to the branch and the branch is published
+3. `chopshop.py` is run, possibly on a few different meet videos.
+4. The resulting videos in `/test` and `/train` are checked for quality.
+5. The videos are committed to the branch and the branch is published
 
 ---
 
