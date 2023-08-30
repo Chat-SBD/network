@@ -44,4 +44,4 @@ cm = tf.math.confusion_matrix(actual, predicted)
 plot_cm(cm, [0, 1, 2, 3], argv[1] + 'cm_all.png')
 
 cm_binary = cm.numpy().reshape(2, 2, 2, 2).sum(axis = (2, 3))
-plot_cm(cm_binary, ['Fail', 'Pass'], argv[1] + 'cm_binary.png')
+plot_cm(cm_binary, ['no lift', 'lift'], argv[1] + 'cm_binary.png')
