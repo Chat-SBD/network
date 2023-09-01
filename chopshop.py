@@ -7,24 +7,24 @@ WHITE = [255, 255, 255]
 RED = [228, 20, 0]
 
 # (y, x)
-LOC1 = (284, 114)
-LOC2 = (284, 132)
-LOC3 = (284, 151)
-BATCHNUM = 10
+LOC1 = (327, 118)
+LOC2 = (327, 138)
+LOC3 = (327, 157)
+BATCHNUM = 13
 LIFTTYPE = "deadlift"
-STARTTIME = 11769
+STARTTIME = 11940
 OFFSET = 4
 
 # upper left corner of crop
-X1 = 174
-Y1 = 7
+X1 = 197
+Y1 = 6
 
 # initial objects
-mainClip = VideoFileClip("C:/Users/samed/Downloads/videoplayback (10).mp4").subclip(STARTTIME)
+mainClip = VideoFileClip("C:/Users/samed/Downloads/videoplayback (1).mp4").subclip(STARTTIME)
 clipseq = 0
 index = 1
 
-ENDTIME = 16360
+ENDTIME = 15780
 #ENDTIME = STARTTIME + mainClip.duration
 
 def redorwhite(arg) :
