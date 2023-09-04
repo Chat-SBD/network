@@ -1,5 +1,5 @@
 """
-Train a model on a batch, just normally without any parallel work.
+Train a model on a batch, distributed across the cluster.
 
 Args:
     1: str. The path to the saved model folder. 'lifts/squat/models/conv21d/'
@@ -52,11 +52,9 @@ outsig = (
     tf.TensorSpec(shape = (), dtype = tf.int16)
 )
 ds_train = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'train'), output_signature = outsig)
-ds_test = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'test'), output_signature = outsig)
 ds_val = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'val'), output_signature = outsig)
 
 ds_train = ds_train.batch(100)
-ds_test = ds_test.batch(100)
 ds_val = ds_val.batch(100)
 world.Barrier()
 
