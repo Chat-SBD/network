@@ -27,12 +27,12 @@ outsig = (
 ds_train = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'train'), output_signature = outsig)
 ds_val = tf.data.Dataset.from_generator(FrameGenerator(DSPATH, 'val'), output_signature = outsig)
 
-ds_train = ds_train.batch(100)
-ds_val = ds_val.batch(100)
+ds_train = ds_train.batch(20)
+ds_val = ds_val.batch(20)
 
 model.fit(
     x = ds_train,
-    epochs = 20,
+    epochs = 10,
     validation_data = ds_val
 )
 
