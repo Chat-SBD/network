@@ -13,7 +13,7 @@ from lib.data import acc, plot_cm
 from lib.network import FrameGenerator
 from lib.CONSTANTS import FRAMES, SIZE
 
-SAVEPATH = argv[1] + 'model/'
+SAVEPATH = argv[1] + 'model.h5'
 DSPATH = '/'.join(argv[1].split('/')[: 2]) + '/dataset/'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 

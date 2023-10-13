@@ -15,7 +15,7 @@ import logging
 from lib.network import FrameGenerator
 from lib.CONSTANTS import FRAMES, SIZE
 
-SAVEPATH = argv[1] + 'model/'
+SAVEPATH_H5 = argv[1] + 'model.h5'
 DSPATH = '/'.join(argv[1].split('/')[: 2]) + '/dataset/'
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '3'
 
@@ -43,7 +43,7 @@ world.Barrier()
 
 logging.warning(f'{name}:Loading model...')
 with strategy.scope():
-    model = keras.models.load_model(SAVEPATH)
+    model = keras.models.load_model(SAVEPATH_H5)
 world.Barrier()
 
 logging.warning(f'{name}:Building datasets...')
@@ -62,7 +62,7 @@ world.Barrier()
 
 model.fit(
     x = ds_train,
-    epochs = 20,
+    epochs = 1,
     verbose = 0 if rank != 0 else 1,
     validation_data = ds_val
 )
@@ -70,7 +70,9 @@ world.Barrier()
 
 logging.warning(f'{name}:Saving...')
 if rank == 0:
-    model.save(SAVEPATH)
+    model.save(SAVEPATH_H5)
 else:
-    model.save('/tmp/model')
+    model.save('/tmp/model.h5')
 logging.warning(f'{name}:Saved model')
+
+# then run `tensorflowjs_converter --input_format keras lifts/squat/models/lstm/model.h5 lifts/squat/models/lstm/modeljs/`

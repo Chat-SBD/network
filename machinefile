@@ -1,3 +1,8 @@
+# cluster setup:
+# `ssh node1, node2, node3, etc...`
+# `sudo mount -t nfs beowulf:/usr /usr`
+# `sudo mount -t nfs beowufl:/etc/alternatives /etc/alternatives`
+
 # `mpiexec -n 5 -f machinefile <command> <command args...>`
 # to test cluster connection: `mpiexec -n 5 -f machinefile python3 flops.py 5`
 
