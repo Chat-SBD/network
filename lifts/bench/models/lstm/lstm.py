@@ -24,7 +24,6 @@ model = keras.Sequential([
     keras.layers.TimeDistributed(
         keras.layers.MaxPooling2D(pool_size = (POOL, POOL))
     ),
-    keras.layers.BatchNormalization(),
     keras.layers.Reshape((FRAMES, int((SIZE / POOL) * (SIZE / POOL) * FILTERS))),
     keras.layers.LSTM(
         units = 1000,
@@ -41,6 +40,6 @@ model.compile(
 )
 print('Compiled model...')
 
-model.save('lifts/bench/models/lstm/model')
+model.save('lifts/bench/models/lstm/model.h5')
 keras.utils.plot_model(model, to_file = 'lifts/bench/models/lstm/lstm.png', show_shapes = True)
 print('Saved model')
