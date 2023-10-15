@@ -62,7 +62,7 @@ world.Barrier()
 
 model.fit(
     x = ds_train,
-    epochs = 1,
+    epochs = 20,
     verbose = 0 if rank != 0 else 1,
     validation_data = ds_val
 )
@@ -76,3 +76,4 @@ else:
 logging.warning(f'{name}:Saved model')
 
 # then run `tensorflowjs_converter --input_format keras lifts/squat/models/lstm/model.h5 lifts/squat/models/lstm/modeljs/`
+# you might have to mess around with custom/non-custom tf installs to use tensorflowjs_converter
