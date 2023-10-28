@@ -34,6 +34,10 @@ class FrameGenerator:
             self.x = x_train
             self.y = y_train
             self.x, self.y = expand(self.x, self.y)
+            random.seed(42)
+            random.shuffle(self.x)
+            random.seed(42)
+            random.shuffle(self.y)
         
         elif portion == 'test':
             self.x = x_test
