@@ -81,9 +81,55 @@ def train_test_val(x, y, test_size = TEST_SIZE, val_size = VAL_SIZE):
 
     return x_train, y_train, x_test, y_test, x_val, y_val
 
+def expand(x, y):
+    """
+    Duplicate data to make each category the same size.
+    Keep in mind that the data will be organized throughout the arrays into each category,
+    and will need to be re-shuffled.
+
+    Args:
+        x: array. Data to be classified.
+        y: array. Corresponding classification labels.
+    """
+
+    unique, counts = np.unique(y, return_counts = True)
+    max_unique = np.max(counts)
+
+    new_x = np.ndarray(shape = (0))
+    new_y = np.ndarray(shape = (0))
+
+    # for each unique category...
+    for cat in unique:
+        expanded = []
+
+        videos = []
+        index = 0
+        # for each video in x...
+        while index < len(x):
+            # if that video is in the category...
+            if y[index] == cat:
+                videos.append(x[index])
+            index += 1
+        
+        # while the expanded category array is not long enough...
+        while len(expanded) < max_unique:
+            # for each video in that category...
+            for video in videos:
+                # if the expanded array is STILL not long enough yet...
+                if len(expanded) < max_unique:
+                    expanded.append(video)
+                else:
+                    break
+        
+        # add the expanded array to the full expanded x, and to y
+        new_x = np.concatenate((new_x, np.array(expanded)), axis = 0)
+        new_y = np.concatenate((new_y, np.array([cat] * len(expanded))), axis = 0)
+    
+    return new_x, new_y
+
 def compress(x, y):
     """
-    Like expand, but instead of duplicating data, it removes data.
+    Delete data to make each category the same size.
     Keep in mind that the data will be organized throughout the arrays into each category,
     and will need to be re-shuffled.
 
@@ -126,6 +172,19 @@ def compress(x, y):
         new_y = np.concatenate((new_y, np.array([cat] * len(expanded))), axis = 0)
     
     return new_x, new_y
+
+def variate(vid):
+    """
+    Randomly increases or decreases every integer in a (FRAMES, SIZE, SIZE, 1) array,
+    keeping them inclusive between 0 and 255.
+    This adds variation to expanded datasets to prevent overfitting
+
+    Args:
+        vid: array. Shape = (FRAMES, SIZE, SIZE, 1)
+    """
+
+    randoms = np.random.randint(-10, 11, size = vid.shape)
+    return np.clip(vid + randoms, 0, 255)
 
 def acc(actual_values, predicted_values):
     correct_predictions = 0
