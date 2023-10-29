@@ -42,7 +42,7 @@ class FrameGenerator:
         elif portion == 'test':
             self.x = x_test
             self.y = y_test
-            self.x, self.y = compress(self.x, self.y)
+            #self.x, self.y = compress(self.x, self.y)
         
         elif portion == 'val':
             self.x = x_val
